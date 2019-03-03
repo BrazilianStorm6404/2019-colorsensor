@@ -27,70 +27,79 @@ s3 = 3
 r = 0
 g = 0
 b = 0
- 
-output = 18
+
+output = 4
 NUM_CICLOS = 10
 
 def setup():
-	GPIO.setmode(GPIO.BCM) 
-	GPIO.setup(output, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-	GPIO.setup(s0, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-	GPIO.setup(s1, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-	GPIO.setup(s2, GPIO.OUT)
-	GPIO.setup(s3, GPIO.OUT)
-	print("\n")
-	
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(output, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(s0, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(s1, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(s2, GPIO.OUT)
+        GPIO.setup(s3, GPIO.OUT)
+        print("\n")
+
 def detecta_vermelho():
-	GPIO.output(s2, GPIO.LOW) # a cor que esse sensor detecta
-	GPIO.output(s3, GPIO.LOW) # depende do sinal enviado a essas duas portas
-	inicio = time.time()
-	for impulso in range(NUM_CICLOS):
-		GPIO.wait_for_edge(output, GPIO.FALLING)
-	duracao = time.time() - inicio
-	return NUM_CICLOS / duracao
-	
+        GPIO.output(s2, GPIO.LOW) # a cor que esse sensor detecta
+        GPIO.output(s3, GPIO.LOW) # depende do sinal enviado a essas duas portas
+        inicio = time.time()
+        for impulso in range(NUM_CICLOS):
+                GPIO.wait_for_edge(output, GPIO.FALLING)
+        duracao = time.time() - inicio
+        return NUM_CICLOS / duracao
+
 def detecta_azul():
-	GPIO.output(s2, GPIO.LOW)
-	GPIO.output(s3, GPIO.HIGH)
-	inicio = time.time()
-	for impulso in range(NUM_CICLOS):
-		GPIO.wait_for_edge(output, GPIO.FALLING)
-	duracao = time.time() - inicio
-	return NUM_CICLOS / duracao
-	
+        GPIO.output(s2, GPIO.LOW)
+        GPIO.output(s3, GPIO.HIGH)
+        inicio = time.time()
+        for impulso in range(NUM_CICLOS):
+                GPIO.wait_for_edge(output, GPIO.FALLING)
+        duracao = time.time() - inicio
+        return NUM_CICLOS / duracao
+
 def detecta_verde():
-	GPIO.output(s2, GPIO.HIGH)
-	GPIO.output(s3, GPIO.HIGH)
-	inicio = time.time()
-	for impulso in range(NUM_CICLOS):
-		GPIO.wait_for_edge(output, GPIO.FALLING)
-	duracao = time.time() - inicio
-	return NUM_CICLOS / duracao
-	
+        GPIO.output(s2, GPIO.HIGH)
+        GPIO.output(s3, GPIO.HIGH)
+        inicio = time.time()
+        for impulso in range(NUM_CICLOS):
+                GPIO.wait_for_edge(output, GPIO.FALLING)
+        duracao = time.time() - inicio
+        return NUM_CICLOS / duracao
+
 def loop(): # essa funcao parece idiota, mas se eu terminar de testar vou implementar mais funcionalidades
-	red = detecta_vermelho()
-	green = detecta_verde()
-	blue = detecta_azul()
-	if red < 250 and green < 250 and blue < 250:
-		optico.putBoolean('Detect Black', True)
-		print('detectou preto')
-	elif red > 200 and red < 500 and green < 300: 
-		optico.putBoolean('Detect Red', True)
-		print('detectou vermelho')
-	elif green > 300 and green < 600:
-		optico.putBoolean('Detect Green', True)
-		print('detectou verde')
-	elif (blue + green + red) > 1:
+        red = detecta_vermelho()
+        green = detecta_verde()
+        blue = detecta_azul()
+        if red < 250 and green < 250 and blue < 250:
+                optico.putBoolean('Detect Black', True)
+                optico.putBoolean('Detect Blue', False)
+                optico.putBoolean('Detect Red', False)
+                optico.putBoolean('Detect Green', False)
+                print('detectou preto')
+        elif red > 200 and red < 500 and green < 300:
+                optico.putBoolean('Detect Red', True)
+                optico.putBoolean('Detect Black', False)
+                optico.putBoolean('Detect Blue', False)
+                optico.putBoolean('Detect Green', False)
+                print('detectou vermelho')
+        elif green > 300 and green < 600:
+                optico.putBoolean('Detect Green', True)
+                optico.putBoolean('Detect Black', False)
+                optico.putBoolean('Detect Blue', False)
+                optico.putBoolean('Detect Red', False)
+                print('detectou verde')
+        elif (blue + green + red) > 1:
                 optico.putBoolean('Detect Blue', True)
+                optico.putBoolean('Detect Black', False)
+                optico.putBoolean('Detect Red', False)
+                optico.putBoolean('Detect Green', False)
                 print('detectou aluminio')
-	else:
-		optico.putBoolean('Detect Black', False)
-		optico.putBoolean('Detect Red', False)
-		optico.putBoolean('Detect Green', False)
-	optico.putNumber('Red',red)
-	optico.putNumber('Blue',blue)
-	optico.putNumber('Green',green)
-	print('r: ',red, ' g: ',green,' b: ',blue)
+                
+        optico.putNumber('Red',red)
+        optico.putNumber('Blue',blue)
+        optico.putNumber('Green',green)
+        print('r: ',red, ' g: ',green,' b: ',blue)
 
 """Report parse error."""
 def parseError(str):
@@ -178,7 +187,7 @@ def alternative_align(frame, sd):
     else:
         cv2.rectangle(frame, (int(((w / 2) - 5) - difference_w), 0), (int(((w / 2) + 5) - difference_w), h), (0, 255, 255), -1)
     return frame
-    
+
 if __name__ == "__main__":
     if len(sys.argv) >= 2:
         configFile = sys.argv[1]
@@ -192,7 +201,7 @@ if __name__ == "__main__":
 
     print("Setting up NetworkTables client for team {}".format(team))
     ntinst.startClientTeam(team)
-
+    setup()
     shuffle = ntinst.getTable('Shuffleboard')
     sd = shuffle.getSubTable('Vision')
     optico = shuffle.getSubTable('Optico')
@@ -202,12 +211,12 @@ if __name__ == "__main__":
     cs.enableLogging()
     camera = cs.startAutomaticCapture()
     camera.setResolution(160,120)
-    
+
     print("connected")
 
-    # CvSink objects allows you to apply OpenCV magic to CameraServer frames 
+    # CvSink objects allows you to apply OpenCV magic to CameraServer frames
     cv_sink = cs.getVideo()
-    
+
     # CvSource objects allows you to pass OpenCV frames to your CameraServer
     outputStream = cs.putVideo("Processed Frames", 160,120)
 
@@ -223,5 +232,5 @@ if __name__ == "__main__":
             outputStream.notifyError(cv_sink.getError())
             continue
         img = alternative_align(img, sd)
-    
+
         outputStream.putFrame(img)
